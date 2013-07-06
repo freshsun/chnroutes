@@ -26,6 +26,8 @@ def generate_linux(metric):
     export PATH="/bin:/sbin:/usr/sbin:/usr/bin"
     
     OLDGW=`ip route show | grep '^default' | sed -e 's/default via \\([^ ]*\\).*/\\1/'`
+    DEVNAME=`ip route | sed -e 's/default via .* dev \([^ ]*\).*/\1/'`
+
     
     if [ $OLDGW == '' ]; then
         exit 0
@@ -33,6 +35,9 @@ def generate_linux(metric):
     
     if [ ! -e /tmp/vpn_oldgw ]; then
         echo $OLDGW > /tmp/vpn_oldgw
+        echo $DEVNAME > /tmp/vpn_devname
+        route del default $DEVNAME
+        route add default dev $1
     fi
     
     """)
@@ -88,8 +93,11 @@ def generate_mac(metric):
             exit 0
     fi
     
-    ODLGW=`cat /tmp/pptp_oldgw`
-    
+    ODLGW=`cat /tmp/pptp_oldgw`    
+    DEVNAME=`cat /tmp/vpn_devname`
+    route del default $1
+    route add default dev ${DEVNAME} gw ${OLDGW}
+
     """)
     
     upfile=open('ip-up','w')
